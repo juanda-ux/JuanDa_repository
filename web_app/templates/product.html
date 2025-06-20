@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}{{ product.title }}{% endblock %}
+{% block content %}
+<h2>{{ product.title }}</h2>
+<p>{{ product.description }}</p>
+<p><strong>{{ '%.2f' % (product.price_cents / 100) }} USD</strong></p>
+{% if current_user.is_authenticated %}
+<form action="{{ url_for('create_checkout_session', product_id=product.id) }}" method="post">
+  <button type="submit" class="btn btn-success">Buy</button>
+</form>
+{% else %}
+<p>Please <a href="{{ url_for('login') }}">login</a> to purchase.</p>
+{% endif %}
+{% endblock %}
