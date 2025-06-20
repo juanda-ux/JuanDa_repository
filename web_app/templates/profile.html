@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}{{ user.username }}{% endblock %}
+{% block content %}
+<h2>{{ user.username }}</h2>
+{% if user.avatar_url %}
+<img src="{{ user.avatar_url }}" class="img-thumbnail mb-3" style="max-width:150px;">
+{% endif %}
+<p>{{ user.bio }}</p>
+<p>Total sales: {{ total_sales }}</p>
+<h3>Products</h3>
+<ul>
+{% for p in user.products %}
+    <li><a href="{{ url_for('product_detail', username=user.username, slug=p.slug) }}">{{ p.title }}</a></li>
+{% else %}
+    <li>No products yet.</li>
+{% endfor %}
+</ul>
+{% endblock %}

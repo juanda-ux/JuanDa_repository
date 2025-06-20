@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<h2>Your Dashboard</h2>
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">Products</h5>
+                <p class="card-text">{{ product_count }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">Sales</h5>
+                <p class="card-text">{{ total_sales }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">Revenue</h5>
+                <p class="card-text">${{ '%.2f' % revenue }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+<h3>Your Products</h3>
+{% if not current_user.stripe_user_id %}
+<p class="alert alert-warning">Connect your Stripe account to start selling.</p>
+<a href="{{ url_for('connect_stripe') }}" class="btn btn-primary mb-3">Connect Stripe</a>
+{% endif %}
+<a href="{{ url_for('new_product') }}" class="btn btn-success mb-3">Add Product</a>
+<table class="table">
+    <tr><th>Title</th><th>Price</th><th>Link</th></tr>
+    {% for p in products %}
+    <tr>
+        <td>{{ p.title }}</td>
+        <td>{{ '%.2f' % (p.price_cents / 100) }} USD</td>
+        <td><a href="{{ url_for('product_detail', username=p.owner.username, slug=p.slug) }}">View</a></td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}
