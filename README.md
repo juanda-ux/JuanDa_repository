@@ -29,7 +29,6 @@ The app uses SQLite to store data and will create `web_app/app.db` on first run.
 Users can register, upload digital files, and create product pages that accept
 Stripe payments. After a successful payment the buyer receives a download link
 for the purchased file.
-
 Public product pages use clean URLs of the form `/u/<username>/p/<product-slug>`
 and each user has a profile page at `/u/<username>` listing their products.
 
