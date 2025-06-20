@@ -12,6 +12,9 @@
         <div>
             {% if current_user.is_authenticated %}
             <a class="btn btn-outline-secondary" href="{{ url_for('dashboard') }}">Dashboard</a>
+            {% if not current_user.stripe_user_id %}
+            <a class="btn btn-warning" href="{{ url_for('connect_stripe') }}">Connect Stripe</a>
+            {% endif %}
             <a class="btn btn-outline-secondary" href="{{ url_for('logout') }}">Logout</a>
             {% else %}
             <a class="btn btn-outline-secondary" href="{{ url_for('login') }}">Login</a>

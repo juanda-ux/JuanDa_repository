@@ -10,7 +10,8 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(128), nullable=False)
-    stripe_account = db.Column(db.String(120))
+    # ID of the connected Stripe account obtained via OAuth
+    stripe_user_id = db.Column(db.String(120))
     products = db.relationship('Product', backref='owner', lazy=True)
     purchases = db.relationship('Purchase', backref='buyer', lazy=True)
 

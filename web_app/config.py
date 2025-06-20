@@ -8,3 +8,5 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY')
     STRIPE_PUBLIC_KEY = os.environ.get('STRIPE_PUBLIC_KEY')
+    # OAuth client ID for Stripe Connect Standard
+    STRIPE_CLIENT_ID = os.environ.get('STRIPE_CLIENT_ID')

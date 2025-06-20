@@ -2,6 +2,10 @@
 {% block title %}Dashboard{% endblock %}
 {% block content %}
 <h2>Your Products</h2>
+{% if not current_user.stripe_user_id %}
+<p class="alert alert-warning">Connect your Stripe account to start selling.</p>
+<a href="{{ url_for('connect_stripe') }}" class="btn btn-primary mb-3">Connect Stripe</a>
+{% endif %}
 <a href="{{ url_for('new_product') }}" class="btn btn-success mb-3">Add Product</a>
 <table class="table">
     <tr><th>Title</th><th>Price</th><th>Link</th></tr>

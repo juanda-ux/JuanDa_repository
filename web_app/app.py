@@ -23,6 +23,9 @@ import stripe
 
 from models import db, User, Product, Purchase
 from config import Config
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -96,6 +99,41 @@ def dashboard():
     return render_template('dashboard.html', products=products)
 
 
+@app.route('/connect-stripe')
+@login_required
+def connect_stripe():
+    """Redirect the user to Stripe's OAuth flow to connect their account."""
+    if not app.config['STRIPE_CLIENT_ID']:
+        flash('Stripe client ID not configured')
+        return redirect(url_for('dashboard'))
+
+    redirect_uri = url_for('stripe_oauth_callback', _external=True)
+    url = (
+        'https://connect.stripe.com/oauth/authorize?response_type=code'
+        f'&client_id={app.config["STRIPE_CLIENT_ID"]}'
+        f'&scope=read_write&redirect_uri={redirect_uri}'
+    )
+    return redirect(url)
+
+
+@app.route('/stripe-oauth-callback')
+@login_required
+def stripe_oauth_callback():
+    code = request.args.get('code')
+    if not code:
+        flash('Stripe connection failed')
+        return redirect(url_for('dashboard'))
+
+    try:
+        resp = stripe.OAuth.token(grant_type='authorization_code', code=code)
+        current_user.stripe_user_id = resp['stripe_user_id']
+        db.session.commit()
+        flash('Stripe account connected')
+    except Exception as e:
+        flash('Error connecting Stripe account')
+    return redirect(url_for('dashboard'))
+
+
 @app.route('/product/new', methods=['GET', 'POST'])
 @login_required
 def new_product():
@@ -129,6 +167,10 @@ def product_detail(product_id):
 @login_required
 def create_checkout_session(product_id):
     product = Product.query.get_or_404(product_id)
+    if not product.owner.stripe_user_id:
+        flash('Seller has not connected Stripe account.')
+        return redirect(url_for('product_detail', product_id=product_id))
+
     session = stripe.checkout.Session.create(
         payment_method_types=['card'],
         line_items=[{
@@ -146,12 +188,7 @@ def create_checkout_session(product_id):
                             _external=True) + '?session_id={CHECKOUT_SESSION_ID}',
         cancel_url=url_for('product_detail', product_id=product.id,
                            _external=True),
-        payment_intent_data={
-            'application_fee_amount': int(product.price_cents * 0.1),
-            'transfer_data': {
-                'destination': product.owner.stripe_account,
-            },
-        } if product.owner.stripe_account else None
+        stripe_account=product.owner.stripe_user_id
     )
     return redirect(session.url)
 
