@@ -1,0 +1,116 @@
+openapi: 3.1.0
+info:
+  title: WebSmith Studio API
+  version: 0.1.0
+servers:
+  - url: https://api.websmith.dev
+paths:
+  /projects:
+    get:
+      summary: List projects
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Project list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Project'
+    post:
+      summary: Create project
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProjectInput'
+      responses:
+        '201':
+          description: Created
+  /generate:
+    post:
+      summary: Generate site from prompt
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerationRequest'
+      responses:
+        '202':
+          description: Generation job created
+  /generate/{id}:
+    get:
+      summary: Job status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Job status
+  /forms/submit/{formId}:
+    post:
+      summary: Submit form
+      parameters:
+        - in: path
+          name: formId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Submission result
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    Project:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        slug:
+          type: string
+        status:
+          type: string
+    CreateProjectInput:
+      type: object
+      required: [name, slug, templateId, locale]
+      properties:
+        name:
+          type: string
+        slug:
+          type: string
+        templateId:
+          type: string
+        locale:
+          type: string
+        content:
+          type: object
+    GenerationRequest:
+      type: object
+      required: [prompt]
+      properties:
+        prompt:
+          type: string
+        templateId:
+          type: string
+        brandColors:
+          type: array
+          items:
+            type: string
+        locale:
+          type: string

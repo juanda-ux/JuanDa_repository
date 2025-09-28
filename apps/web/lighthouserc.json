@@ -1,0 +1,8 @@
+{
+  "ci": {
+    "collect": {
+      "numberOfRuns": 2,
+      "staticDistDir": ".next"
+    }
+  }
+}

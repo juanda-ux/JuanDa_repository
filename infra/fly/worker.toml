@@ -1,0 +1,16 @@
+app = "websmith-worker"
+primary_region = "iad"
+
+[build]
+  dockerfile = "apps/api/Dockerfile"
+
+[env]
+  WORKER_MODE = "1"
+  PORT = "4001"
+
+[[services]]
+  internal_port = 4001
+  protocol = "tcp"
+  [[services.ports]]
+    handlers = ["http"]
+    port = 80
