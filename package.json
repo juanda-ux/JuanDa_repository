@@ -1,0 +1,14 @@
+{
+  "name": "saas-webgen-monorepo",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@8.15.4",
+  "scripts": {
+    "postinstall": "pnpm --filter @websmith/database exec prisma generate || true",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test",
+    "build": "pnpm -r build",
+    "dev": "pnpm --filter websmith-web dev & pnpm --filter websmith-api start:dev",
+    "setup": "pnpm --filter @websmith/database prisma migrate deploy && pnpm --filter @websmith/database prisma db seed"
+  }
+}

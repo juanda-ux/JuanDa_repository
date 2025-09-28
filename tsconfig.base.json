@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2021",
+    "lib": ["DOM", "DOM.Iterable", "ES2021"],
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "baseUrl": ".",
+    "paths": {
+      "@websmith/ui": ["packages/ui/src"],
+      "@websmith/config": ["packages/config/src"],
+      "@websmith/types": ["packages/types/src"],
+      "@websmith/database": ["packages/database/src"],
+      "@websmith/database/prisma": ["packages/database/prisma"],
+      "@websmith/*": ["packages/*/src"]
+    }
+  }
+}

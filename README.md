@@ -1,30 +1,132 @@
-# JuanDa_repository
+# WebSmith Studio
 
-This repository now includes a simple digital product marketplace built with Flask.
+> Plataforma SaaS para generar y desplegar sitios web modernos a partir de instrucciones en lenguaje natural o wizards guiados.
 
-## Running the web application
+## Tabla de contenidos
+- [Visión general](#visión-general)
+- [Arquitectura](#arquitectura)
+- [Stack tecnológico](#stack-tecnológico)
+- [Requisitos](#requisitos)
+- [Primeros pasos](#primeros-pasos)
+- [Scripts disponibles](#scripts-disponibles)
+- [Estructura de carpetas](#estructura-de-carpetas)
+- [Configuración de entorno](#configuración-de-entorno)
+- [Guía de desarrollo local](#guía-de-desarrollo-local)
+- [Guía de despliegue](#guía-de-despliegue)
+- [Testing y calidad](#testing-y-calidad)
+- [Observabilidad](#observabilidad)
+- [Seguridad](#seguridad)
+- [Accesibilidad](#accesibilidad)
+- [Resultados Lighthouse](#resultados-lighthouse)
+- [Roadmap](#roadmap)
+- [Decisiones y trade-offs](#decisiones-y-trade-offs)
 
-1. Install Python dependencies (preferably in a virtual environment):
+## Visión general
+WebSmith Studio permite a equipos no técnicos generar landing pages, blogs, portfolios y micrositios completos aprovechando un editor visual con drag & drop, plantillas optimizadas para SEO, generación asistida por IA y despliegues automatizados a plataformas como Vercel y Netlify.
 
-```bash
-pip install -r web_app/requirements.txt
+## Arquitectura
+Monorepo gestionado con pnpm workspaces que alberga aplicaciones de frontend (Next.js) y backend (NestJS) además de paquetes compartidos (UI, tipos, configuración). Se adopta una arquitectura hexagonal/DDD:
+
+```mermaid
+graph LR
+    A[apps/web] -->|API REST/GraphQL| B[apps/api]
+    B --> C[(PostgreSQL)]
+    B --> D[(Redis)]
+    B --> E[(S3-compatible)]
+    B --> F[(Stripe)]
+    B --> G[(Email Provider)]
+    B --> H[Observability Stack]
 ```
 
-2. Set environment variables for Stripe keys (you can obtain test keys from the Stripe dashboard):
+Los módulos backend se segmentan en capas `domain`, `application` y `infrastructure`. El frontend consume los contratos expuestos en `packages/types` y comparte design tokens desde `packages/ui`.
 
+Diagramas C4 se encuentran en `docs/architecture/`.
+
+## Stack tecnológico
+- **Frontend**: Next.js 14 (App Router), React 18, TypeScript, TailwindCSS, Headless UI, Zustand, React Hook Form, i18next, DnD Kit.
+- **Backend**: NestJS 10, Fastify adapter, TypeScript, Prisma, Zod, BullMQ, Pino, OpenTelemetry, Helmet.
+- **Base de datos**: PostgreSQL (multi-tenant por `tenant_id`).
+- **Infraestructura**: Docker, docker-compose, Terraform (esqueleto), Fly.io/Render (guía), GitHub Actions CI/CD.
+- **Otros**: Stripe, Resend (mockeable), MinIO, Redis, Prometheus/Grafana stack opcional.
+
+## Requisitos
+- Node.js 18+
+- pnpm 8+
+- Docker + Docker Compose v2
+- Make (opcional)
+
+## Primeros pasos
 ```bash
-export STRIPE_SECRET_KEY=sk_test_your_key
-export STRIPE_PUBLIC_KEY=pk_test_your_key
+pnpm install
+pnpm run setup
 ```
 
-3. Run the application:
+> `pnpm run setup` ejecuta migraciones, genera el cliente de Prisma y aplica seeds de datos de ejemplo.
 
-```bash
-python web_app/app.py
+## Scripts disponibles
+| Script | Descripción |
+| --- | --- |
+| `pnpm dev` | Levanta frontend y backend en modo desarrollo. |
+| `pnpm lint` | Ejecuta ESLint y valida formateo con Prettier. |
+| `pnpm test` | Ejecuta suites unitarias, de integración y E2E. |
+| `pnpm build` | Genera artefactos de producción para todas las apps. |
+
+## Estructura de carpetas
+```
+.
+├── apps
+│   ├── api
+│   └── web
+├── packages
+│   ├── config
+│   ├── database
+│   ├── types
+│   └── ui
+├── docs
+│   ├── accessibility
+│   ├── architecture
+│   └── security
 ```
 
-The app uses SQLite to store data and will create `web_app/app.db` on first run.
+## Configuración de entorno
+Variables descritas en `.env.example`. Cada app consume configuración tipada desde `packages/config`.
 
-Users can register, upload digital files, and create product pages that accept
-Stripe payments. After a successful payment the buyer receives a download link
-for the purchased file.
+## Guía de desarrollo local
+1. `pnpm install`
+2. `docker compose up -d`
+3. `pnpm --filter packages/database prisma migrate deploy`
+4. `pnpm --filter packages/database prisma db seed`
+5. `pnpm dev`
+
+## Guía de despliegue
+Consulte [docs/deployment.md](docs/deployment.md) para instrucciones TL;DR y detalladas (Fly.io/Render + Vercel/Netlify).
+
+## Testing y calidad
+- Unit tests: Jest (backend) y Vitest/Testing Library (frontend).
+- Integración: Supertest para endpoints NestJS.
+- E2E: Playwright simula flujo completo (registro → creación → generación → export → deploy mock).
+- Cobertura reportada en `coverage/`.
+
+## Observabilidad
+- Logs estructurados (Pino) enviados a stdout.
+- Métricas expuestas en `/metrics` (Prometheus).
+- Tracing OpenTelemetry con exportador OTLP configurable.
+
+## Seguridad
+- Hash Argon2id, JWT + refresh con rotación, CSRF tokens en formularios, sanitización con DOMPurify en frontend.
+- Rate limiting por IP/tenant con Redis.
+- Auditoría de dependencias vía `pnpm audit` en CI.
+
+## Accesibilidad
+Checklist y resultados disponibles en `docs/accessibility/checklist.md`.
+
+## Resultados Lighthouse
+Reportes reproducibles en `docs/architecture/lighthouse.md`.
+
+## Roadmap
+- Integración IA generativa on-premise.
+- Builder colaborativo multiusuario en tiempo real.
+- Template marketplace.
+
+## Decisiones y trade-offs
+Ver [docs/architecture/decisions.md](docs/architecture/decisions.md).

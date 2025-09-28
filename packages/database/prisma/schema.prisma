@@ -1,0 +1,173 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+model Tenant {
+  id        String    @id @default(cuid())
+  name      String
+  slug      String    @unique
+  plan      PlanTier  @default(FREE)
+  users     User[]
+  projects  Project[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+enum PlanTier {
+  FREE
+  PRO
+}
+
+model User {
+  id             String   @id @default(cuid())
+  tenantId       String
+  email          String   @unique
+  passwordHash   String
+  role           UserRole @default(USER)
+  providers      OAuthProvider[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+model OAuthProvider {
+  id        String   @id @default(cuid())
+  userId    String
+  provider  String
+  providerId String
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([provider, providerId])
+}
+
+model Project {
+  id          String        @id @default(cuid())
+  tenantId    String
+  name        String
+  slug        String
+  templateId  String
+  locale      String
+  status      ProjectStatus @default(DRAFT)
+  content     Json
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  versions    ProjectVersion[]
+  generationJobs GenerationJob[]
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@unique([tenantId, slug])
+}
+
+enum ProjectStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model ProjectVersion {
+  id         String   @id @default(cuid())
+  projectId  String
+  label      String
+  data       Json
+  createdAt  DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id])
+}
+
+model GenerationJob {
+  id          String          @id @default(cuid())
+  projectId   String
+  prompt      String
+  status      GenerationStatus @default(QUEUED)
+  outputUrl   String?
+  error       String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id])
+}
+
+enum GenerationStatus {
+  QUEUED
+  PROCESSING
+  DONE
+  FAILED
+}
+
+model Deployment {
+  id          String          @id @default(cuid())
+  projectId   String
+  provider    DeploymentProvider
+  status      DeploymentStatus @default(QUEUED)
+  url         String?
+  logsUrl     String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id])
+}
+
+enum DeploymentProvider {
+  VERCEL
+  NETLIFY
+}
+
+enum DeploymentStatus {
+  QUEUED
+  DEPLOYING
+  SUCCESS
+  FAILED
+}
+
+model Form {
+  id        String   @id @default(cuid())
+  tenantId  String
+  name      String
+  schema    Json
+  createdAt DateTime @default(now())
+  submissions FormSubmission[]
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+}
+
+model FormSubmission {
+  id        String   @id @default(cuid())
+  formId    String
+  payload   Json
+  createdAt DateTime @default(now())
+  metadata  Json
+
+  form Form @relation(fields: [formId], references: [id])
+}
+
+model FeatureFlag {
+  id        String  @id @default(cuid())
+  tenantId  String?
+  key       String
+  enabled   Boolean @default(true)
+  createdAt DateTime @default(now())
+
+  @@unique([tenantId, key])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  tenantId  String?
+  userId    String?
+  action    String
+  metadata  Json
+  createdAt DateTime @default(now())
+}

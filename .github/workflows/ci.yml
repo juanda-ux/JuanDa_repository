@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: websmith
+          POSTGRES_PASSWORD: websmith
+          POSTGRES_DB: websmith
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U websmith" --health-interval 10s --health-timeout 5s --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'pnpm'
+      - run: corepack enable pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter packages/database prisma migrate deploy
+        env:
+          DATABASE_URL: postgresql://websmith:websmith@localhost:5432/websmith
+      - run: pnpm --filter packages/database prisma db seed
+        env:
+          DATABASE_URL: postgresql://websmith:websmith@localhost:5432/websmith
+      - run: pnpm lint
+      - run: pnpm test
+      - run: pnpm --filter apps/web test:e2e -- --reporter=list
+        env:
+          HOME: /home/runner
+      - run: pnpm --filter apps/web build
+      - run: pnpm --filter apps/api build
